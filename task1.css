@@ -1,0 +1,106 @@
+body {
+    margin: 0;
+    font-family: sans-serif;
+    background-color: #f5f5f5;
+  }
+  
+  header {
+    background-color: plum;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  
+  h1 {
+    font-size: 3em;
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    margin: 0;
+    text-align: center;
+    color: black;
+  
+  }
+
+  @keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  
+  .fade-in-element {
+    opacity: 0; 
+    
+  }
+  
+  
+   
+  h2 {
+    font-size: 1.5em;
+    margin: 0.5em 0;
+    text-align: center;
+    animation: fadeIn 4s ease-in-out forwards; 
+  
+  }
+  
+  .shop-now {
+    background-color: #e0629f;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .shop-now:hover {
+    background-color: #d74a85;
+  }
+  
+  .hero {
+    height: 10vh;
+    /* Add background image or video with animations */
+  }
+  
+  
+  .product-showcase {
+    display: flex; 
+    justify-content: space-around; 
+    flex-wrap: wrap; 
+}
+
+
+
+.product {
+    text-align: center; 
+    margin-bottom: 20px; 
+    padding: 20px; 
+    border: 1px solid #ccc; 
+    border-radius: 8px; 
+    width: 300px; 
+    
+}
+
+.product img {
+    width: 100%; 
+    border-radius: 8px; 
+    margin-bottom: 10px; 
+}
+
+.product h3 {
+    font-size: 1.5rem; 
+    margin-bottom: 10px; 
+}
+
+.product p {
+    font-size: 1rem;
+    color: #666; /
+}
+
+
+  
+
+  
+
+
+  
+  
