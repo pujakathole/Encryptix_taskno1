@@ -6,7 +6,13 @@ document.addEventListener('DOMContentLoaded', function () {
   var clearCompletedBtn = document.getElementById('clearCompleted');
   var filterBtns = document.querySelectorAll('.filter-btn');
 
-  var tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+  var tasks = (function () {
+    try {
+      return JSON.parse(localStorage.getItem('tasks')) || [];
+    } catch (e) {
+      return [];
+    }
+  })();
   var currentFilter = 'all';
 
   function saveTasks() {
