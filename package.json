@@ -1,0 +1,24 @@
+{
+  "name": "encryptix_taskno1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "login.js",
+  "scripts": {
+    "test": "jest --verbose"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "jest": {
+    "transformIgnorePatterns": [
+      "node_modules/"
+    ]
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.2",
+    "babel-jest": "^30.3.0",
+    "jest": "^30.3.0",
+    "jsdom": "^20.0.3"
+  }
+}
