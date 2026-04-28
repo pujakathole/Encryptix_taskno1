@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D Dog with Dimensions</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      overflow: hidden;
+      color: #fff;
+    }
+    #info {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.6);
+      padding: 10px 24px;
+      border-radius: 12px;
+      font-size: 16px;
+      z-index: 10;
+      text-align: center;
+      backdrop-filter: blur(6px);
+    }
+    #info h1 { font-size: 22px; margin-bottom: 4px; }
+    #info p { font-size: 13px; opacity: 0.8; }
+    #dimensions-panel {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(0,0,0,0.65);
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      z-index: 10;
+      backdrop-filter: blur(6px);
+      line-height: 1.8;
+    }
+    #dimensions-panel h3 { margin-bottom: 6px; color: #ffd700; }
+    #dimensions-panel span.val { color: #00e5ff; font-weight: bold; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+
+<div id="info">
+  <h1>🐕 3D Dog Model with Dimensions</h1>
+  <p>Click &amp; drag to rotate · Scroll to zoom · Right-click to pan</p>
+</div>
+
+<div id="dimensions-panel">
+  <h3>📏 Dog Dimensions</h3>
+  Total Length: <span class="val">120 cm</span><br/>
+  Body Length: <span class="val">70 cm</span><br/>
+  Height (ground to top of head): <span class="val">65 cm</span><br/>
+  Body Height: <span class="val">35 cm</span><br/>
+  Body Width: <span class="val">30 cm</span><br/>
+  Head Size: <span class="val">20 × 18 × 20 cm</span><br/>
+  Leg Length: <span class="val">25 cm</span><br/>
+  Tail Length: <span class="val">30 cm</span><br/>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.152.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ── Scene setup ──────────────────────────────────────────────
+const scene    = new THREE.Scene();
+const camera   = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(devicePixelRatio);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+camera.position.set(100, 80, 140);
+camera.lookAt(0, 20, 0);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.target.set(0, 20, 0);
+
+// ── Lighting ─────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+dirLight.position.set(60, 100, 80);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.set(2048, 2048);
+scene.add(dirLight);
+
+const pointLight = new THREE.PointLight(0xffd700, 0.4, 300);
+pointLight.position.set(-40, 60, -40);
+scene.add(pointLight);
+
+// ── Ground ───────────────────────────────────────────────────
+const groundGeo = new THREE.PlaneGeometry(400, 400);
+const groundMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, roughness: 0.9 });
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// ── Grid helper ──────────────────────────────────────────────
+const grid = new THREE.GridHelper(400, 40, 0x444466, 0x333355);
+grid.position.y = 0.1;
+scene.add(grid);
+
+// ── Materials ────────────────────────────────────────────────
+const bodyMat   = new THREE.MeshStandardMaterial({ color: 0xc68642, roughness: 0.6, metalness: 0.05 });
+const darkMat   = new THREE.MeshStandardMaterial({ color: 0x8B5E3C, roughness: 0.7 });
+const noseMat   = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.3 });
+const eyeMat    = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2, metalness: 0.6 });
+const eyeWhite  = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
+const tongueMat = new THREE.MeshStandardMaterial({ color: 0xff6b8a, roughness: 0.5 });
+
+const dogGroup = new THREE.Group();
+
+// ── Body (70 × 35 × 30 cm) ──────────────────────────────────
+const bodyGeo = new THREE.CapsuleGeometry(15, 40, 16, 24);
+const body = new THREE.Mesh(bodyGeo, bodyMat);
+body.rotation.z = Math.PI / 2;
+body.position.set(0, 35, 0);
+body.castShadow = true;
+dogGroup.add(body);
+
+// ── Head (20 × 18 × 20 cm) ──────────────────────────────────
+const headGeo = new THREE.SphereGeometry(10, 24, 24);
+headGeo.scale(1, 0.9, 1);
+const head = new THREE.Mesh(headGeo, bodyMat);
+head.position.set(38, 42, 0);
+head.castShadow = true;
+dogGroup.add(head);
+
+// Snout
+const snoutGeo = new THREE.CylinderGeometry(4, 5.5, 10, 16);
+const snout = new THREE.Mesh(snoutGeo, bodyMat);
+snout.rotation.z = -Math.PI / 2;
+snout.position.set(48, 39, 0);
+snout.castShadow = true;
+dogGroup.add(snout);
+
+// Nose
+const noseGeo = new THREE.SphereGeometry(2.5, 16, 16);
+const nose = new THREE.Mesh(noseGeo, noseMat);
+nose.position.set(53, 40, 0);
+dogGroup.add(nose);
+
+// Eyes
+const eyeGeoOuter = new THREE.SphereGeometry(2.5, 16, 16);
+const eyeGeoInner = new THREE.SphereGeometry(1.5, 16, 16);
+
+[-1, 1].forEach(side => {
+  const eyeWhiteMesh = new THREE.Mesh(eyeGeoOuter, eyeWhite);
+  eyeWhiteMesh.position.set(44, 46, side * 6);
+  dogGroup.add(eyeWhiteMesh);
+
+  const eyePupil = new THREE.Mesh(eyeGeoInner, eyeMat);
+  eyePupil.position.set(46, 46.5, side * 6);
+  dogGroup.add(eyePupil);
+});
+
+// Ears
+const earGeo = new THREE.ConeGeometry(5, 14, 8);
+[-1, 1].forEach(side => {
+  const ear = new THREE.Mesh(earGeo, darkMat);
+  ear.position.set(32, 52, side * 8);
+  ear.rotation.x = side * 0.3;
+  ear.rotation.z = side * 0.2;
+  ear.castShadow = true;
+  dogGroup.add(ear);
+});
+
+// Tongue
+const tongueGeo = new THREE.BoxGeometry(6, 1.2, 3);
+const tongue = new THREE.Mesh(tongueGeo, tongueMat);
+tongue.position.set(50, 34, 0);
+tongue.rotation.z = 0.25;
+dogGroup.add(tongue);
+
+// ── Legs (25 cm each) ────────────────────────────────────────
+const legGeo = new THREE.CylinderGeometry(3.5, 3, 25, 12);
+const pawGeo = new THREE.SphereGeometry(4, 12, 12);
+pawGeo.scale(1, 0.5, 1.1);
+
+const legPositions = [
+  { x: 18, z:  10 },
+  { x: 18, z: -10 },
+  { x:-18, z:  10 },
+  { x:-18, z: -10 },
+];
+
+legPositions.forEach(pos => {
+  const leg = new THREE.Mesh(legGeo, darkMat);
+  leg.position.set(pos.x, 12.5, pos.z);
+  leg.castShadow = true;
+  dogGroup.add(leg);
+
+  const paw = new THREE.Mesh(pawGeo, darkMat);
+  paw.position.set(pos.x, 1.5, pos.z);
+  paw.castShadow = true;
+  dogGroup.add(paw);
+});
+
+// ── Tail (30 cm, curled up) ──────────────────────────────────
+const tailCurve = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-28, 35, 0),
+  new THREE.Vector3(-35, 42, 0),
+  new THREE.Vector3(-38, 52, 2),
+  new THREE.Vector3(-34, 58, 4),
+]);
+const tailGeo = new THREE.TubeGeometry(tailCurve, 20, 2.5, 8, false);
+const tail = new THREE.Mesh(tailGeo, bodyMat);
+tail.castShadow = true;
+dogGroup.add(tail);
+
+// Collar
+const collarGeo = new THREE.TorusGeometry(12, 1.5, 8, 32);
+const collarMat = new THREE.MeshStandardMaterial({ color: 0xff2244, roughness: 0.3, metalness: 0.4 });
+const collar = new THREE.Mesh(collarGeo, collarMat);
+collar.position.set(28, 38, 0);
+collar.rotation.y = Math.PI / 2;
+dogGroup.add(collar);
+
+// Collar tag
+const tagGeo = new THREE.CircleGeometry(2.5, 16);
+const tagMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.8, roughness: 0.2, side: THREE.DoubleSide });
+const tag = new THREE.Mesh(tagGeo, tagMat);
+tag.position.set(28, 26, 0);
+dogGroup.add(tag);
+
+scene.add(dogGroup);
+
+// ── Dimension lines & labels ─────────────────────────────────
+const dimLineMat = new THREE.LineBasicMaterial({ color: 0xffd700, linewidth: 2 });
+
+function makeLine(points, material) {
+  const geo = new THREE.BufferGeometry().setFromPoints(points);
+  return new THREE.Line(geo, material || new THREE.LineBasicMaterial({ color: 0x00e5ff }));
+}
+
+function makeArrow(from, to, color) {
+  const dir = new THREE.Vector3().subVectors(to, from).normalize();
+  const len = from.distanceTo(to);
+  return new THREE.ArrowHelper(dir, from, len, color || 0x00e5ff, 3, 2);
+}
+
+// Total length line (120 cm)
+const totalLenStart = new THREE.Vector3(-38, -5, 35);
+const totalLenEnd   = new THREE.Vector3(53, -5, 35);
+scene.add(makeArrow(totalLenStart, totalLenEnd, 0x00e5ff));
+scene.add(makeArrow(totalLenEnd, totalLenStart, 0x00e5ff));
+scene.add(makeLine([new THREE.Vector3(-38, 0, 35), new THREE.Vector3(-38, -8, 35)], dimLineMat));
+scene.add(makeLine([new THREE.Vector3(53, 0, 35), new THREE.Vector3(53, -8, 35)], dimLineMat));
+
+// Height line (65 cm)
+const heightStart = new THREE.Vector3(65, 0, 0);
+const heightEnd   = new THREE.Vector3(65, 58, 0);
+scene.add(makeArrow(heightStart, heightEnd, 0xff6b8a));
+scene.add(makeArrow(heightEnd, heightStart, 0xff6b8a));
+scene.add(makeLine([new THREE.Vector3(60, 0, 0), new THREE.Vector3(70, 0, 0)], dimLineMat));
+scene.add(makeLine([new THREE.Vector3(60, 58, 0), new THREE.Vector3(70, 58, 0)], dimLineMat));
+
+// Body width line (30 cm)
+const widthStart = new THREE.Vector3(0, -5, -18);
+const widthEnd   = new THREE.Vector3(0, -5, 18);
+scene.add(makeArrow(widthStart, widthEnd, 0xffd700));
+scene.add(makeArrow(widthEnd, widthStart, 0xffd700));
+scene.add(makeLine([new THREE.Vector3(0, 0, -18), new THREE.Vector3(0, -8, -18)], dimLineMat));
+scene.add(makeLine([new THREE.Vector3(0, 0, 18), new THREE.Vector3(0, -8, 18)], dimLineMat));
+
+// ── Sprite labels ────────────────────────────────────────────
+function createLabel(text, position, color) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 512;
+  canvas.height = 128;
+
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.beginPath();
+  ctx.moveTo(16, 0);
+  ctx.lineTo(496, 0);
+  ctx.quadraticCurveTo(512, 0, 512, 16);
+  ctx.lineTo(512, 112);
+  ctx.quadraticCurveTo(512, 128, 496, 128);
+  ctx.lineTo(16, 128);
+  ctx.quadraticCurveTo(0, 128, 0, 112);
+  ctx.lineTo(0, 16);
+  ctx.quadraticCurveTo(0, 0, 16, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.font = 'bold 48px Segoe UI, sans-serif';
+  ctx.fillStyle = color || '#00e5ff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 256, 64);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+  const sprite = new THREE.Sprite(spriteMat);
+  sprite.position.copy(position);
+  sprite.scale.set(30, 7.5, 1);
+  return sprite;
+}
+
+scene.add(createLabel('Total Length: 120 cm', new THREE.Vector3(8, -12, 35), '#00e5ff'));
+scene.add(createLabel('Height: 65 cm', new THREE.Vector3(78, 29, 0), '#ff6b8a'));
+scene.add(createLabel('Width: 30 cm', new THREE.Vector3(0, -12, 0), '#ffd700'));
+scene.add(createLabel('Tail: 30 cm', new THREE.Vector3(-42, 62, 0), '#c0ff44'));
+scene.add(createLabel('Leg: 25 cm', new THREE.Vector3(25, 6, 22), '#ff9800'));
+scene.add(createLabel('Body: 70 × 35 cm', new THREE.Vector3(0, 55, 0), '#e0e0e0'));
+scene.add(createLabel('Head: 20 cm', new THREE.Vector3(46, 58, 0), '#e0aaff'));
+
+// ── Animation ────────────────────────────────────────────────
+let time = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  time += 0.02;
+
+  // Gentle tail wag
+  tail.rotation.y = Math.sin(time * 3) * 0.15;
+
+  // Subtle body breathing
+  body.scale.y = 1 + Math.sin(time * 1.5) * 0.015;
+
+  // Gentle tongue movement
+  tongue.scale.x = 1 + Math.sin(time * 2) * 0.1;
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+// ── Resize ───────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
