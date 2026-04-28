@@ -63,12 +63,19 @@
   Tail Length: <span class="val">30 cm</span><br/>
 </div>
 
-<!-- Three.js from CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<!-- OrbitControls -->
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.152.0/examples/jsm/"
+  }
+}
+</script>
 
-<script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
 // ── Scene setup ──────────────────────────────────────────────
 const scene    = new THREE.Scene();
 const camera   = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 1000);
@@ -82,7 +89,7 @@ document.body.appendChild(renderer.domElement);
 camera.position.set(100, 80, 140);
 camera.lookAt(0, 20, 0);
 
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
+const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.target.set(0, 20, 0);
@@ -238,38 +245,32 @@ dogGroup.add(tag);
 scene.add(dogGroup);
 
 // ── Dimension lines & labels ─────────────────────────────────
-const lineMat = new THREE.LineBasicMaterial({ color: 0x00e5ff, linewidth: 2 });
 const dimLineMat = new THREE.LineBasicMaterial({ color: 0xffd700, linewidth: 2 });
 
 function makeLine(points, material) {
   const geo = new THREE.BufferGeometry().setFromPoints(points);
-  return new THREE.Line(geo, material || lineMat);
+  return new THREE.Line(geo, material || new THREE.LineBasicMaterial({ color: 0x00e5ff }));
 }
 
 function makeArrow(from, to, color) {
   const dir = new THREE.Vector3().subVectors(to, from).normalize();
   const len = from.distanceTo(to);
-  const arrow = new THREE.ArrowHelper(dir, from, len, color || 0x00e5ff, 3, 2);
-  return arrow;
+  return new THREE.ArrowHelper(dir, from, len, color || 0x00e5ff, 3, 2);
 }
 
-// Total length line (120 cm → mapped)
+// Total length line (120 cm)
 const totalLenStart = new THREE.Vector3(-38, -5, 35);
 const totalLenEnd   = new THREE.Vector3(53, -5, 35);
 scene.add(makeArrow(totalLenStart, totalLenEnd, 0x00e5ff));
 scene.add(makeArrow(totalLenEnd, totalLenStart, 0x00e5ff));
-
-// Vertical dashes for total length
 scene.add(makeLine([new THREE.Vector3(-38, 0, 35), new THREE.Vector3(-38, -8, 35)], dimLineMat));
 scene.add(makeLine([new THREE.Vector3(53, 0, 35), new THREE.Vector3(53, -8, 35)], dimLineMat));
 
-// Height line (65 cm ground to top of head)
+// Height line (65 cm)
 const heightStart = new THREE.Vector3(65, 0, 0);
 const heightEnd   = new THREE.Vector3(65, 58, 0);
 scene.add(makeArrow(heightStart, heightEnd, 0xff6b8a));
 scene.add(makeArrow(heightEnd, heightStart, 0xff6b8a));
-
-// Horizontal dashes for height
 scene.add(makeLine([new THREE.Vector3(60, 0, 0), new THREE.Vector3(70, 0, 0)], dimLineMat));
 scene.add(makeLine([new THREE.Vector3(60, 58, 0), new THREE.Vector3(70, 58, 0)], dimLineMat));
 
@@ -278,7 +279,6 @@ const widthStart = new THREE.Vector3(0, -5, -18);
 const widthEnd   = new THREE.Vector3(0, -5, 18);
 scene.add(makeArrow(widthStart, widthEnd, 0xffd700));
 scene.add(makeArrow(widthEnd, widthStart, 0xffd700));
-
 scene.add(makeLine([new THREE.Vector3(0, 0, -18), new THREE.Vector3(0, -8, -18)], dimLineMat));
 scene.add(makeLine([new THREE.Vector3(0, 0, 18), new THREE.Vector3(0, -8, 18)], dimLineMat));
 
@@ -288,9 +288,21 @@ function createLabel(text, position, color) {
   const ctx = canvas.getContext('2d');
   canvas.width = 512;
   canvas.height = 128;
+
   ctx.fillStyle = 'rgba(0,0,0,0.7)';
-  ctx.roundRect(0, 0, 512, 128, 16);
+  ctx.beginPath();
+  ctx.moveTo(16, 0);
+  ctx.lineTo(496, 0);
+  ctx.quadraticCurveTo(512, 0, 512, 16);
+  ctx.lineTo(512, 112);
+  ctx.quadraticCurveTo(512, 128, 496, 128);
+  ctx.lineTo(16, 128);
+  ctx.quadraticCurveTo(0, 128, 0, 112);
+  ctx.lineTo(0, 16);
+  ctx.quadraticCurveTo(0, 0, 16, 0);
+  ctx.closePath();
   ctx.fill();
+
   ctx.font = 'bold 48px Segoe UI, sans-serif';
   ctx.fillStyle = color || '#00e5ff';
   ctx.textAlign = 'center';
